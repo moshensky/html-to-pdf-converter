@@ -1,0 +1,11 @@
+.vscode
+config
+coverage
+src
+typings
+.editorconfig
+.prettierrc.json
+.travis.yml
+.nvmrc
+tsconfig.json
+tslint.json

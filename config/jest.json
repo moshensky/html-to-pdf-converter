@@ -1,0 +1,28 @@
+{
+  "rootDir": "../",
+  "coverageDirectory": "<rootDir>/coverage",
+  "transform": {
+    "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+  },
+  "testRegex": "(/__tests__/.*|\\.(test|spec))\\.tsx?$",
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+  "globals": {
+    "ts-jest": {
+      "skipBabel": true
+    }
+  },
+  "coveragePathIgnorePatterns": ["/node_modules/"],
+  "coverageThreshold": {
+    "global": {
+      "statements": 90,
+      "branches": 90,
+      "lines": 90,
+      "functions": 90
+    }
+  },
+  "collectCoverage": true,
+  "collectCoverageFrom": ["src/**/*.{ts,tsx}"],
+  "mapCoverage": true,
+  "testPathIgnorePatterns": ["/node_modules/", ".+support\\.test\\.ts"],
+  "moduleDirectories": ["node_modules", "../src"]
+}

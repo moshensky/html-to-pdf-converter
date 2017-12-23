@@ -1,0 +1,9 @@
+*.pdf
+
+coverage/
+/node_modules
+
+/dist
+/commonjs
+/es
+/types
