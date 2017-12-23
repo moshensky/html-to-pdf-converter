@@ -1,0 +1,33 @@
+{
+  "name": "html-to-pdf-converter",
+  "version": "0.0.0",
+  "description": "HTML to PDF converter with support for HEADERS, FOOTERS and page numbers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moshensky/html-to-pdf-converter.git"
+  },
+  "keywords": [
+    "html",
+    "pdf",
+    "converter",
+    "puppeteer",
+    "HummusJS",
+    "header",
+    "footer",
+    "pages"
+  ],
+  "main": "./commonjs/index.js",
+  "types": "./types/index.d.ts",
+  "author": "Nikita Moshensky",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/moshensky/html-to-pdf-converter/issues"
+  },
+  "homepage": "https://github.com/moshensky/html-to-pdf-converter#readme",
+  "scripts": {
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
