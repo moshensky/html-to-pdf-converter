@@ -88,8 +88,15 @@ const addFooterToPdf = async (
   }
 }
 
-export const mkCompoundPdf = async (contents: ContentWithFooter[]): Promise<Buffer> => {
-  const browser = await puppeteer.launch()
+export interface MkPdfOptions {
+  puppeteer?: puppeteer.LaunchOptions
+}
+
+export const mkCompoundPdf = async (
+  contents: ContentWithFooter[],
+  options: MkPdfOptions = {},
+): Promise<Buffer> => {
+  const browser = await puppeteer.launch(options.puppeteer)
   const page = await browser.newPage()
   const pdfsWithEmptySpaceForFooter: PDFWithEmptySpaceForFooterAndPagesCount[] = []
   for (let content of contents) {
@@ -113,8 +120,11 @@ export const mkCompoundPdf = async (contents: ContentWithFooter[]): Promise<Buff
   return appendPdfs(pdfsWithFooter)
 }
 
-export const mkPdf = async ({ margin, pageSize, pdfContent }: PdfContent): Promise<Buffer> => {
-  const browser = await puppeteer.launch()
+export const mkPdf = async (
+  { margin, pageSize, pdfContent }: PdfContent,
+  options: MkPdfOptions = {},
+): Promise<Buffer> => {
+  const browser = await puppeteer.launch(options.puppeteer)
   const page = await browser.newPage()
   const pdfBuffer = await mkSizedPdf(pdfContent, page, pageSize, margin)
 
