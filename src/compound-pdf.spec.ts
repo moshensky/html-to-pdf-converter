@@ -6,7 +6,7 @@ import { PrintMargin, pageSizeInMM } from '../src/types'
 import { Millimeters } from './index'
 import { compareToExpectedMultiple, compareToExpected } from './utils/test-helpers'
 
-const headerHtml = readFileSync(join(__dirname, './test-files/header.html'), 'utf8')
+// const headerHtml = readFileSync(join(__dirname, './test-files/header.html'), 'utf8')
 const footerHtml = readFileSync(join(__dirname, './test-files/footer.html'), 'utf8')
 const firstPageHtml = readFileSync(join(__dirname, './test-files/first-page.html'), 'utf8')
 const resultsHtml = readFileSync(join(__dirname, './test-files/results.html'), 'utf8')
