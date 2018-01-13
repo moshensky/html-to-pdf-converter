@@ -41,7 +41,7 @@ export const getPDFWithSimpleOneLineFooter= (document: string): Buffer => {
     {
       pdfContent: document,
       footer: {
-        type: 'StaticHeaderFooter',
+        type: 'TextHeaderFooter',
         left: {
           fontPath: footerFontPath,
           text: 'https://github.com/moshensky/html-to-pdf-converter',
@@ -80,7 +80,7 @@ export const getPDFProtocolStream = (
     {
       pdfContent: restPages,
       footer: {
-        type: 'StaticHeaderFooter',
+        type: 'TextHeaderFooter',
         left: {
           fontPath: footerFontPath,
           text: 'https://github.com/moshensky/html-to-pdf-converter',

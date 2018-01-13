@@ -7,10 +7,11 @@ import {
   WriteTextOptions,
   createWriter,
   ePDFPageBoxMediaBox,
+  UsedFont,
 } from 'hummus'
 import { ReadStreamForBuffer } from './read-stream-for-buffer'
 import { PDFStreamForBuffer } from './pdf-stream-for-buffer'
-import { PrintMargin, StaticHeaderFooter, PDF_POINTS_PER_MM, PdfPoints } from './types'
+import { PrintMargin, TextHeaderFooter, PdfPoints } from './types'
 
 interface PageInfo {
   width: PdfPoints
@@ -21,12 +22,22 @@ interface PageInfo {
 
 type GetWriteTextArguments = (
   pageInfo: PageInfo,
-) => [string, PdfPoints, PdfPoints, WriteTextOptions]
+) => {
+  text: string
+  x: PdfPoints
+  y: PdfPoints
+  txtOpts: {
+    font: UsedFont
+    size: PdfPoints
+    underline: boolean
+    color: number
+  }
+}
 
 export interface AddFooterArgs {
   pdfBuffer: Buffer
   margin: PrintMargin
-  txt: StaticHeaderFooter
+  txt: TextHeaderFooter
   startPageNum: number
   endPageNum: number
   totalPagesCount: number
@@ -45,9 +56,14 @@ export const addFooter = (args: AddFooterArgs) => {
     const { fontPath, text, size, underline, color } = txt.left
     const font = pdfWriter.getFontForFile(fontPath)
     writeTextArguments.push(() => {
-      const x = margin.left * PDF_POINTS_PER_MM
-      const y = margin.bottom * PDF_POINTS_PER_MM
-      return [text, x, y, { font, size, underline, color }]
+      const x = margin.left.toPdfPoints()
+      const y = margin.bottom.toPdfPoints()
+      return {
+        text,
+        x,
+        y,
+        txtOpts: { font, size: size.toPdfPoints(), underline: !!underline, color },
+      }
     })
   }
 
@@ -56,18 +72,31 @@ export const addFooter = (args: AddFooterArgs) => {
     const font = pdfWriter.getFontForFile(fontPath)
     writeTextArguments.push(({ pageNumber, pagesCount, width }: PageInfo) => {
       const txt = text.replace('{page}', `${pageNumber}`).replace('{pages}', `${pagesCount}`)
-      const textDimensions = font.calculateTextDimensions(txt, size)
-      const x = width - (textDimensions.width + margin.right * PDF_POINTS_PER_MM)
-      const y = margin.bottom * PDF_POINTS_PER_MM
-      return [txt, x, y, { font, size, underline, color }]
+      const textDimensions = font.calculateTextDimensions(txt, size.toPdfPoints()._n)
+      const x = width.subtract(
+        PdfPoints.of(textDimensions.width + 5).add(margin.right.toPdfPoints()),
+      )
+      const y = margin.bottom.toPdfPoints()
+
+      return {
+        text: txt,
+        x,
+        y,
+        txtOpts: { font, size: size.toPdfPoints(), underline: !!underline, color },
+      }
     })
   }
 
   const editPage = (cxt: XObjectContentContext, pageInfo: PageInfo): void => {
     const { cm, q, writeText, Q } = cxt
-    cm.apply(cxt, [1, 0, 0, -1, 0, pageInfo.height])
+    cm.apply(cxt, [1, 0, 0, -1, 0, pageInfo.height._n])
     q.apply(cxt)
-    writeTextArguments.forEach(getArguments => writeText.apply(cxt, getArguments(pageInfo)))
+    writeTextArguments.forEach(getArguments => {
+      const { txtOpts, ...args } = getArguments(pageInfo)
+      const { font, size, underline, color } = txtOpts
+      const options: WriteTextOptions = { font, size: size._n, underline, color }
+      writeText.apply(cxt, [args.text, args.x._n, args.y._n, options])
+    })
     Q.apply(cxt)
   }
 
@@ -76,8 +105,8 @@ export const addFooter = (args: AddFooterArgs) => {
     const pageModifier = new PDFPageModifier(pdfWriter, pageIndex)
     const cxt = pageModifier.startContext().getContext()
     editPage(cxt, {
-      width,
-      height,
+      width: PdfPoints.of(width),
+      height: PdfPoints.of(height),
       pageNumber: startPageNum + pageIndex,
       pagesCount: totalPagesCount,
     })
@@ -106,8 +135,8 @@ export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin) =
   const targetCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(target))
   const sourceCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(source))
 
-  const left = margin.left * PDF_POINTS_PER_MM
-  const bottom = targetMediaBox[3] - margin.bottom * PDF_POINTS_PER_MM
+  const left = margin.left.toPdfPoints()
+  const bottom = PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
 
   range(0, targetPagesCount).forEach(pageIndex => {
     const page = pdfWriter.createPage.apply(pdfWriter, targetMediaBox)
@@ -117,7 +146,7 @@ export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin) =
     pdfWriter
       .startPageContentContext(page)
       .q()
-      .cm(1, 0, 0, -1, left, bottom)
+      .cm(1, 0, 0, -1, left._n, bottom._n)
       .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
       .Q()
 

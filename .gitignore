@@ -1,5 +1,3 @@
-*.pdf
-
 coverage/
 /node_modules
 
@@ -7,3 +5,4 @@ coverage/
 /commonjs
 /es
 /types
+output
