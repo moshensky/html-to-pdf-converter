@@ -35,9 +35,8 @@
     "build": "npm run lint && npm run clean && tsc -p ./tsconfig.json",
     "tsc": "tsc -p ./tsconfig.json",
     "tsc:watch": "npm run tsc -- --watch",
-    "test": "jest",
+    "test": "jest --coverage --no-cache",
     "test:watch": "jest --watch",
-    "test:prod": "jest --coverage --no-cache",
     "format:configs": "prettier --write ./tsconfig.json ./.prettierrc.json ./config/tslint.json ./config/**/*.json ./config/**/*.js"
   },
   "dependencies": {

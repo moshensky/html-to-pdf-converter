@@ -1,5 +1,12 @@
 # Testing
 
+## Setup
+
+```bash
+brew install graphicsmagick
+brew install ghostscript
+```
+
 ## Graphicsmagick
 
 ```bash
