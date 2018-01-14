@@ -11,6 +11,9 @@ node_js:
 cache:
   directories:
     - "node_modules"
+before_install:
+  - cp -r fonts /usr/share/fonts/truetype
+  - fc-cache -f -v
 install:
   - npm install
 script:
