@@ -36,27 +36,33 @@ interface CompareImagesResult {
   readonly equality: number
 }
 const compareImages = (
-  expectedPath: string,
-  resultPngPath: string,
+  expectedImagePath: string,
+  resultImagePath: string,
   tolerance: number = 0,
 ): Promise<CompareImagesResult> =>
   new Promise((resolve, reject) => {
-    gm.compare(expectedPath, resultPngPath, { tolerance }, (err, isEqual, equality, raw) => {
+    gm.compare(expectedImagePath, resultImagePath, { tolerance }, (err, isEqual, equality, raw) => {
       if (err) {
         return reject(err)
       }
 
       if (isEqual === false) {
-        console.log('The images were equal: %s', isEqual)
-        console.log('Actual equality: %d', equality)
-        console.log(raw)
+        console.log(
+          ...[
+            `Expected: ${expectedImagePath} \n`,
+            `Result: ${resultImagePath} \n`,
+            `The images were equal: ${isEqual} \n`,
+            `Actual equality: ${equality} \n`,
+            raw,
+          ],
+        )
         const options = {
-          file: `${resultPngPath}.diff.png`,
+          file: `${resultImagePath}.diff.png`,
           highlightColor: 'yellow',
           tolerance,
         }
 
-        gm.compare(expectedPath, resultPngPath, options, () => {
+        gm.compare(expectedImagePath, resultImagePath, options, () => {
           resolve({ isEqual, equality, raw })
         })
       } else {
