@@ -46,11 +46,10 @@ const compareImages = (
         return reject(err)
       }
 
-      // TODO: use DEBUG package
-      // console.log('The images were equal: %s', isEqual)
-      // console.log('Actual equality: %d', equality)
-      // console.log(raw)
       if (isEqual === false) {
+        console.log('The images were equal: %s', isEqual)
+        console.log('Actual equality: %d', equality)
+        console.log(raw)
         const options = {
           file: `${resultPngPath}.diff.png`,
           highlightColor: 'yellow',
