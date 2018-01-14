@@ -2,6 +2,8 @@
 
 [![NPM version][npm-badge-url]][npm-url]
 [![code style: prettier][prettier-badge-url]][prettier-url]
+[![Build Status][travis-ci-badge-url]][travis-ci-url]
+[![Coverage Status][coveralls-badge-url]][coveralls-url]
 
 > HTML to PDF converter with support for HEADERS, FOOTERS and page numbers.
 
@@ -41,7 +43,7 @@ export const getPDFWithSimpleOneLineFooter= (document: string): Buffer => {
     {
       pdfContent: document,
       footer: {
-        type: 'StaticHeaderFooter',
+        type: 'TextHeaderFooter',
         left: {
           fontPath: footerFontPath,
           text: 'https://github.com/moshensky/html-to-pdf-converter',
@@ -80,7 +82,7 @@ export const getPDFProtocolStream = (
     {
       pdfContent: restPages,
       footer: {
-        type: 'StaticHeaderFooter',
+        type: 'TextHeaderFooter',
         left: {
           fontPath: footerFontPath,
           text: 'https://github.com/moshensky/html-to-pdf-converter',
@@ -127,7 +129,36 @@ export const getPDFWithCustomSize = (document: string): Buffer =>
 - cover with tests
 - option to configure reusing chrome instances
 
+## How to run tests
+
+Docker is used to run tests due to minor difference in generated pdfs across various environments.
+
+Build container:
+
+```bash
+docker build  -t html-to-pdf-converter .
+```
+
+To run tests (note that this will give rw rights to docker container to projects folder):
+
+```bash
+docker-compose run --rm converter npm run test
+```
+
+In watch mode:
+
+```bash
+docker-compose run --rm converter npm run test:watch
+```
+
+If pdf comparing tests would fail, an image diff would be generated inside `output` folder.
+
 [npm-url]: https://www.npmjs.com/package/html-to-pdf-converter
-[npm-badge-url]: https://img.shields.io/npm/v/html-to-pdf-converter.svg 
+[npm-badge-url]: https://img.shields.io/npm/v/html-to-pdf-converter.svg
 [prettier-url]: https://github.com/prettier/prettier
 [prettier-badge-url]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg
+[travis-ci-url]: https://travis-ci.org/moshensky/html-to-pdf-converter
+[travis-ci-badge-url]: https://travis-ci.org/moshensky/html-to-pdf-converter.svg?branch=master
+[coveralls-badge-url]: https://coveralls.io/repos/github/moshensky/html-to-pdf-converter/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/moshensky/html-to-pdf-converter?branch=master
+

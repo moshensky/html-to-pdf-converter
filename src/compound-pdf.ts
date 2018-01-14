@@ -12,31 +12,29 @@ import {
 import { propagatePageNumbers } from './helpers'
 import { appendPdfs, getPagesCount, mergePdfs, addFooter } from './hummus'
 import { unreachable } from './utils/index'
+import { Millimeters, PdfText } from './index'
 
 const getFooterSize = async (
   footer: HeaderFooterType,
   margin: PrintMargin,
   pageSize: PageSize,
   page: puppeteer.Page,
-) => {
+): Promise<PageSize> => {
   switch (footer.type) {
     case 'HtmlHeaderFooter': {
       return calcContentSize(footer.html, pageSize, margin, page)
     }
-    case 'StaticHeaderFooter': {
+    case 'TextHeaderFooter': {
       const { left, center, right } = footer
       const height = [left, center, right]
-        .filter(x => x !== undefined)
-        .map(x => {
-          if (!x) {
-            throw new Error('Should be impossible!')
-          }
+        .filter((x: PdfText | undefined): x is PdfText => x !== undefined)
+        .map(x => x.size)
+        .reduce((a, b) => Millimeters.max(a, b))
 
-          return x.size
-        })
-        .reduce((a, b) => Math.max(a, b))
-
-      return { width: pageSize.width - margin.left - margin.right, height }
+      return {
+        width: pageSize.width.subtract(margin.left).subtract(margin.right),
+        height: height.add(Millimeters.of(4)), // add top padding to footer of 4 mm
+      }
     }
     default:
       return unreachable(footer)
@@ -48,10 +46,19 @@ const mkPDFWithEmptySpaceForFooter = async (
   page: puppeteer.Page,
 ): Promise<PDFWithEmptySpaceForFooter> => {
   const footerSize = await getFooterSize(footer, margin, pageSize, page)
-  const pdfBuffer = await mkSizedPdf(pdfContent, page, pageSize, {
-    ...margin,
-    bottom: margin.bottom + footerSize.height,
-  })
+  const pdfBuffer = await mkSizedPdf(
+    pdfContent,
+    page,
+    {
+      height: pageSize.height,
+      // adjust page width according to rounded footer width
+      width: footerSize.width.add(margin.left).add(margin.right),
+    },
+    {
+      ...margin,
+      bottom: margin.bottom.add(footerSize.height),
+    },
+  )
 
   return { pdf: pdfBuffer, margin, footerSize, footer }
 }
@@ -71,9 +78,10 @@ const addFooterToPdf = async (
         totalPagesCount,
       )
       const footerPdf = await mkSizedPdf(htmlFooter, page, footerSize)
+
       return mergePdfs(pdf, footerPdf, margin)
     }
-    case 'StaticHeaderFooter': {
+    case 'TextHeaderFooter': {
       return addFooter({
         pdfBuffer: pdf,
         margin,

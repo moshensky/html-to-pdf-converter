@@ -5,7 +5,8 @@ describe('ReadStreamForBuffer', () => {
 
   it('should read()', () => {
     const readStream = new ReadStreamForBuffer(buffer)
-    expect(readStream.read(2)).toEqual([209, 130])
+    const result = readStream.read(2)
+    expect(result).toEqual([209, 130])
     expect(readStream.getCurrentPosition()).toEqual(2)
   })
 

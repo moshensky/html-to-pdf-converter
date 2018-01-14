@@ -1,0 +1,24 @@
+sudo: false
+dist: trusty
+addons:
+  apt_packages:
+    # - graphicsmagick
+    - graphicsmagick=1.3.18-1ubuntu3
+    - ghostscript
+language: node_js
+node_js:
+  - "8"
+cache:
+  directories:
+    - "node_modules"
+before_install:
+  - cp -r fonts $HOME/.fonts
+  - fc-cache -f -v
+install:
+  - npm install
+script:
+  - npm run tsc
+  - npm run lint
+  - npm run test
+after_success:
+  - npm run coveralls

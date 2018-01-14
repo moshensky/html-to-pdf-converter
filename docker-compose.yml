@@ -1,0 +1,9 @@
+version: '3'
+services:
+  converter:
+    image: html-to-pdf-converter
+    volumes:
+      - .:/home/appuser/app
+      # - /home/appuser/app/node_modules
+    # environment:
+      # - NODE_ENV=${ENVIRONMENT}
