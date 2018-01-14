@@ -37,6 +37,7 @@
     "tsc:watch": "npm run tsc -- --watch",
     "test": "jest --coverage --no-cache",
     "test:watch": "jest --watch",
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "format:configs": "prettier --write ./tsconfig.json ./.prettierrc.json ./config/tslint.json ./config/**/*.json ./config/**/*.js"
   },
   "dependencies": {
@@ -53,6 +54,7 @@
     "@types/jest": "^22.0.1",
     "@types/node": "^8.0.53",
     "@types/typescript": "^2.0.0",
+    "coveralls": "^3.0.0",
     "gm": "^1.23.1",
     "node-glob": "^1.2.0",
     "prettier": "^1.8.2",
