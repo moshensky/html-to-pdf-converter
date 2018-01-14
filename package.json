@@ -83,6 +83,21 @@
       "jsx",
       "json",
       "node"
-    ]
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 85,
+        "branches": 52,
+        "functions": 83,
+        "lines": 84
+      }
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}"
+    ],
+    "mapCoverage": true
   }
 }
