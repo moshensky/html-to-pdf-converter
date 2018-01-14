@@ -4,6 +4,7 @@
 [![code style: prettier][prettier-badge-url]][prettier-url]
 [![Build Status][travis-ci-badge-url]][travis-ci-url]
 [![Coverage Status][coveralls-badge-url]][coveralls-url]
+[![Known Vulnerabilities][snyk-badge-url]][snyk-url]
 
 > HTML to PDF converter with support for HEADERS, FOOTERS and page numbers.
 
@@ -161,4 +162,7 @@ If pdf comparing tests would fail, an image diff would be generated inside `outp
 [travis-ci-badge-url]: https://travis-ci.org/moshensky/html-to-pdf-converter.svg?branch=master
 [coveralls-badge-url]: https://coveralls.io/repos/github/moshensky/html-to-pdf-converter/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/moshensky/html-to-pdf-converter?branch=master
+[snyk-badge-url]: https://snyk.io/test/github/moshensky/html-to-pdf-converter/badge.svg?targetFile=package.json
+[snyk-url]: https://snyk.io/test/github/moshensky/html-to-pdf-converter?targetFile=package.json
+
 
