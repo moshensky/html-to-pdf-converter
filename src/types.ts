@@ -87,13 +87,6 @@ export class Pixels {
   }
 }
 
-export const pageSizeInMM = {
-  A4: {
-    portrait: { width: Millimeters.of(210), height: Millimeters.of(297) },
-    landscape: { width: Millimeters.of(297), height: Millimeters.of(210) },
-  },
-}
-
 export interface PdfText {
   fontPath: string
   text: string
@@ -102,11 +95,24 @@ export interface PdfText {
   color: number
 }
 
-export interface PrintMargin {
-  top: Millimeters
-  right: Millimeters
-  bottom: Millimeters
-  left: Millimeters
+export interface Margin<T> {
+  top: T
+  right: T
+  bottom: T
+  left: T
+}
+
+export interface PrintMargin extends Margin<Millimeters> {}
+
+export type SlotType = 'header' | 'footer'
+
+export const PrintMargin = {
+  ofMillimeters: ({ top, right, bottom, left }: Margin<number>): PrintMargin => ({
+    top: Millimeters.of(top),
+    right: Millimeters.of(right),
+    bottom: Millimeters.of(bottom),
+    left: Millimeters.of(left),
+  }),
 }
 
 export interface SizeInPixels {
@@ -117,6 +123,17 @@ export interface SizeInPixels {
 export interface PageSize {
   width: Millimeters
   height: Millimeters
+}
+
+export const PageSize = {
+  of: (width: number, height: number) => ({
+    width: Millimeters.of(width),
+    height: Millimeters.of(height),
+  }),
+  ofZero: () => ({
+    width: Millimeters.of(0),
+    height: Millimeters.of(0),
+  }),
 }
 
 export interface HtmlHeaderFooter {
@@ -139,17 +156,26 @@ export interface PdfContent {
   pageSize: PageSize
 }
 
-export interface ContentWithFooter extends PdfContent {
-  footer: HeaderFooterType
+export interface ContentWithHeaderFooter extends PdfContent {
+  header?: HeaderFooterType
+  footer?: HeaderFooterType
 }
 
-export interface PDFWithEmptySpaceForFooter {
-  pdf: Buffer
-  margin: PrintMargin
-  footerSize: PageSize
-  footer: HeaderFooterType
+export interface HeaderFooterWithPageSize {
+  readonly size: PageSize
+  readonly data: HeaderFooterType
 }
 
-export interface PDFWithEmptySpaceForFooterAndPagesCount extends PDFWithEmptySpaceForFooter {
-  pagesCount: number
+export interface PDFWithSpaceForHeaderFooter {
+  readonly mainPdf: Buffer
+  readonly margin: PrintMargin
+  readonly header?: HeaderFooterWithPageSize
+  readonly footer?: HeaderFooterWithPageSize
+}
+
+export const pageSizeInMM = {
+  A4: {
+    portrait: PageSize.of(210, 297),
+    landscape: PageSize.of(297, 210),
+  },
 }

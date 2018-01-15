@@ -11,7 +11,7 @@ import {
 } from 'hummus'
 import { ReadStreamForBuffer } from './read-stream-for-buffer'
 import { PDFStreamForBuffer } from './pdf-stream-for-buffer'
-import { PrintMargin, TextHeaderFooter, PdfPoints } from './types'
+import { PrintMargin, TextHeaderFooter, PdfPoints, SlotType } from './types'
 
 interface PageInfo {
   width: PdfPoints
@@ -118,7 +118,7 @@ export const addFooter = (args: AddFooterArgs) => {
   return outputBuffer.getBuffer()
 }
 
-export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin) => {
+export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin, type: SlotType) => {
   const targetReader = createReader(new ReadStreamForBuffer(target))
   const targetFirstPage = targetReader.parsePage(0)
   const targetMediaBox = targetFirstPage.getMediaBox()
@@ -136,7 +136,11 @@ export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin) =
   const sourceCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(source))
 
   const left = margin.left.toPdfPoints()
-  const bottom = PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
+  const yPos =
+    type === 'footer'
+      ? PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
+      : // TODO: find out that part
+        PdfPoints.of(targetMediaBox[0]).subtract(margin.top.toPdfPoints())
 
   range(0, targetPagesCount).forEach(pageIndex => {
     const page = pdfWriter.createPage.apply(pdfWriter, targetMediaBox)
@@ -146,7 +150,7 @@ export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin) =
     pdfWriter
       .startPageContentContext(page)
       .q()
-      .cm(1, 0, 0, -1, left._n, bottom._n)
+      .cm(1, 0, 0, -1, left._n, yPos._n)
       .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
       .Q()
 
