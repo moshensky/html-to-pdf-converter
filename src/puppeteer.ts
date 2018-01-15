@@ -1,6 +1,6 @@
 import * as puppeteer from 'puppeteer'
 import { PrintMargin, PageSize } from './types'
-import { Pixels, Millimeters } from './index'
+import { Pixels } from './index'
 
 export const getBodySize = async (page: puppeteer.Page): Promise<PageSize> => {
   const body = await page.$('html')
@@ -23,12 +23,7 @@ export const mkSizedPdf = async (
   html: string,
   page: puppeteer.Page,
   size: PageSize,
-  margin: PrintMargin = {
-    top: Millimeters.of(0),
-    right: Millimeters.of(0),
-    bottom: Millimeters.of(0),
-    left: Millimeters.of(0),
-  },
+  margin: PrintMargin = PrintMargin.ofZero(),
 ) => {
   await page.setContent(html)
   await page.emulateMedia('screen')

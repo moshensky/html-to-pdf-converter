@@ -113,6 +113,12 @@ export const PrintMargin = {
     bottom: Millimeters.of(bottom),
     left: Millimeters.of(left),
   }),
+  ofZero: () => ({
+    top: Millimeters.of(0),
+    right: Millimeters.of(0),
+    bottom: Millimeters.of(0),
+    left: Millimeters.of(0),
+  }),
 }
 
 export interface SizeInPixels {
@@ -136,19 +142,19 @@ export const PageSize = {
   }),
 }
 
-export interface HtmlHeaderFooter {
-  type: 'HtmlHeaderFooter'
+export interface HtmlSlot {
+  type: 'HtmlSlot'
   html: string
 }
 
-export interface TextHeaderFooter {
-  type: 'TextHeaderFooter'
+export interface TextSlot {
+  type: 'TextSlot'
   left?: PdfText
   center?: PdfText
   right?: PdfText
 }
 
-export type HeaderFooterType = HtmlHeaderFooter | TextHeaderFooter
+export type Slot = HtmlSlot | TextSlot
 
 export interface PdfContent {
   pdfContent: string
@@ -156,21 +162,21 @@ export interface PdfContent {
   pageSize: PageSize
 }
 
-export interface ContentWithHeaderFooter extends PdfContent {
-  header?: HeaderFooterType
-  footer?: HeaderFooterType
+export interface PdfContentWithSlots extends PdfContent {
+  header?: Slot
+  footer?: Slot
 }
 
-export interface HeaderFooterWithPageSize {
+export interface SlotWithPageSize {
   readonly size: PageSize
-  readonly data: HeaderFooterType
+  readonly data: Slot
 }
 
-export interface PDFWithSpaceForHeaderFooter {
+export interface PdfWithSpaceForSlots {
   readonly mainPdf: Buffer
   readonly margin: PrintMargin
-  readonly header?: HeaderFooterWithPageSize
-  readonly footer?: HeaderFooterWithPageSize
+  readonly header?: SlotWithPageSize
+  readonly footer?: SlotWithPageSize
 }
 
 export const pageSizeInMM = {

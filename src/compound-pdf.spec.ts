@@ -40,7 +40,7 @@ describe('mkCompoundPdf()', () => {
           {
             pdfContent: firstPageHtml,
             footer: {
-              type: 'TextHeaderFooter',
+              type: 'TextSlot',
               left: {
                 fontPath: fontPath,
                 text: 'https://github.com/moshensky/html-to-pdf-converter',
@@ -75,7 +75,7 @@ describe('mkCompoundPdf()', () => {
           {
             pdfContent: firstPageHtml,
             footer: {
-              type: 'HtmlHeaderFooter',
+              type: 'HtmlSlot',
               html: footerHtml,
             },
             margin,
@@ -84,7 +84,7 @@ describe('mkCompoundPdf()', () => {
           {
             pdfContent: resultsHtml,
             footer: {
-              type: 'HtmlHeaderFooter',
+              type: 'HtmlSlot',
               html: footerHtml,
             },
             margin,

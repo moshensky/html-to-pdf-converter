@@ -11,7 +11,7 @@ import {
 } from 'hummus'
 import { ReadStreamForBuffer } from './read-stream-for-buffer'
 import { PDFStreamForBuffer } from './pdf-stream-for-buffer'
-import { PrintMargin, TextHeaderFooter, PdfPoints, SlotType } from './types'
+import { PrintMargin, TextSlot, PdfPoints, SlotType } from './types'
 
 interface PageInfo {
   width: PdfPoints
@@ -37,7 +37,7 @@ type GetWriteTextArguments = (
 export interface AddFooterArgs {
   pdfBuffer: Buffer
   margin: PrintMargin
-  txt: TextHeaderFooter
+  txt: TextSlot
   startPageNum: number
   endPageNum: number
   totalPagesCount: number

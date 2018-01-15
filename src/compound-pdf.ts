@@ -1,13 +1,13 @@
 import * as puppeteer from 'puppeteer'
 import { calcContentSize, mkSizedPdf } from './puppeteer'
 import {
-  ContentWithHeaderFooter,
-  PDFWithSpaceForHeaderFooter,
-  HeaderFooterType,
+  PdfContentWithSlots,
+  PdfWithSpaceForSlots,
+  Slot,
   PrintMargin,
   PageSize,
   PdfContent,
-  HeaderFooterWithPageSize,
+  SlotWithPageSize,
 } from './types'
 import { propagatePageNumbers } from './helpers'
 import { appendPdfs, getPagesCount, mergePdfs, addFooter } from './hummus'
@@ -15,16 +15,16 @@ import { unreachable } from './utils/index'
 import { Millimeters, PdfText, SlotType } from './index'
 
 const getFooterSize = async (
-  footer: HeaderFooterType,
+  footer: Slot,
   margin: PrintMargin,
   pageSize: PageSize,
   page: puppeteer.Page,
 ): Promise<PageSize> => {
   switch (footer.type) {
-    case 'HtmlHeaderFooter': {
+    case 'HtmlSlot': {
       return calcContentSize(footer.html, pageSize, margin, page)
     }
-    case 'TextHeaderFooter': {
+    case 'TextSlot': {
       const { left, center, right } = footer
       const height = [left, center, right]
         .filter((x: PdfText | undefined): x is PdfText => x !== undefined)
@@ -41,10 +41,10 @@ const getFooterSize = async (
   }
 }
 
-const mkPDFWithSpaceForHeaderFooter = async (
-  { pdfContent, header, footer, margin, pageSize }: ContentWithHeaderFooter,
+const mkPdfWithSpaceForSlots = async (
+  { pdfContent, header, footer, margin, pageSize }: PdfContentWithSlots,
   page: puppeteer.Page,
-): Promise<PDFWithSpaceForHeaderFooter> => {
+): Promise<PdfWithSpaceForSlots> => {
   const headerSize = header ? PageSize.ofZero() : PageSize.ofZero()
   const footerSize = footer
     ? await getFooterSize(footer, margin, pageSize, page)
@@ -76,19 +76,19 @@ const mkPDFWithSpaceForHeaderFooter = async (
 interface AddHeaderFooterToPdfArgs {
   pdf: Buffer
   margin: PrintMargin
-  slot: HeaderFooterWithPageSize
+  slot: SlotWithPageSize
   pagesCount: number
   page: puppeteer.Page
   startFromPage: number
   totalPagesCount: number
-  type: SlotType
+  slotType: SlotType
 }
 
-const addHeaderFooterToPdf = async (args: AddHeaderFooterToPdfArgs): Promise<Buffer> => {
-  const { pdf, margin, slot, pagesCount, page, startFromPage, totalPagesCount, type } = args
+const addSlotToPdf = async (args: AddHeaderFooterToPdfArgs): Promise<Buffer> => {
+  const { pdf, margin, slot, pagesCount, page, startFromPage, totalPagesCount, slotType } = args
   const { data, size } = slot
   switch (data.type) {
-    case 'HtmlHeaderFooter': {
+    case 'HtmlSlot': {
       const htmlContent = propagatePageNumbers(
         data.html,
         startFromPage,
@@ -97,10 +97,10 @@ const addHeaderFooterToPdf = async (args: AddHeaderFooterToPdfArgs): Promise<Buf
       )
       const pdfContent = await mkSizedPdf(htmlContent, page, size)
 
-      return mergePdfs(pdf, pdfContent, margin, type)
+      return mergePdfs(pdf, pdfContent, margin, slotType)
     }
-    case 'TextHeaderFooter': {
-      if (type === 'header') {
+    case 'TextSlot': {
+      if (slotType === 'header') {
         throw new Error('TODO: to be developed!')
       }
 
@@ -123,36 +123,46 @@ export interface MkPdfOptions {
 }
 
 export const mkCompoundPdf = async (
-  contents: ContentWithHeaderFooter[],
+  contents: PdfContentWithSlots[],
   options: MkPdfOptions = {},
 ): Promise<Buffer> => {
   const browser = await puppeteer.launch(options.puppeteer)
   const page = await browser.newPage()
-  const pdfsWithSpaceForHeaderFooter: {
-    content: PDFWithSpaceForHeaderFooter
+  const pdfsWithSpaceForSlots: {
+    content: PdfWithSpaceForSlots
     pagesCount: number
   }[] = []
   for (let content of contents) {
-    const pdfData = await mkPDFWithSpaceForHeaderFooter(content, page)
+    const pdfData = await mkPdfWithSpaceForSlots(content, page)
     const pagesCount = getPagesCount(pdfData.mainPdf)
-    pdfsWithSpaceForHeaderFooter.push({ content: pdfData, pagesCount })
+    pdfsWithSpaceForSlots.push({ content: pdfData, pagesCount })
   }
 
-  const totalPagesCount = pdfsWithSpaceForHeaderFooter
+  const totalPagesCount = pdfsWithSpaceForSlots
     .map(x => x.pagesCount)
     .reduce((acc, v) => acc + v, 0)
   const pdfsWithSlots: Buffer[] = []
   let startPage = 1
-  for (let { content, pagesCount } of pdfsWithSpaceForHeaderFooter) {
+  for (let { content, pagesCount } of pdfsWithSpaceForSlots) {
     const { mainPdf, margin, footer, header } = content
     const commonArgs = { margin, pagesCount, page, startFromPage: startPage, totalPagesCount }
 
     const withHeader = header
-      ? await addHeaderFooterToPdf({ ...commonArgs, pdf: mainPdf, slot: header, type: 'header' })
+      ? await addSlotToPdf({
+          ...commonArgs,
+          pdf: mainPdf,
+          slot: header,
+          slotType: 'header',
+        })
       : mainPdf
 
     const withSlots = footer
-      ? await addHeaderFooterToPdf({ ...commonArgs, pdf: withHeader, slot: footer, type: 'footer' })
+      ? await addSlotToPdf({
+          ...commonArgs,
+          pdf: withHeader,
+          slot: footer,
+          slotType: 'footer',
+        })
       : withHeader
 
     pdfsWithSlots.push(withSlots)
