@@ -41,10 +41,10 @@
     "format:configs": "prettier --write ./tsconfig.json ./.prettierrc.json ./config/tslint.json ./config/**/*.json ./config/**/*.js"
   },
   "dependencies": {
-    "@types/puppeteer": "^0.13.5",
+    "@types/puppeteer": "^0.13.9",
     "@types/ramda": "^0.25.6",
     "hummus": "^1.0.83",
-    "puppeteer": "^0.13.0",
+    "puppeteer": "^1.0.0",
     "ramda": "^0.25.0"
   },
   "devDependencies": {
