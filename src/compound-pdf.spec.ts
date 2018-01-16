@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { mkCompoundPdf, MkPdfOptions } from '../src/compound-pdf'
+import { initialize, MkPdfOptions, HtmlToPdfConverter } from '../src/compound-pdf'
 import { PrintMargin, pageSizeInMM } from '../src/types'
 import { Millimeters } from './index'
 import { compareToExpectedMultiple, compareToExpected } from './utils/test-helpers'
@@ -21,47 +21,54 @@ const margin: PrintMargin = PrintMargin.ofMillimeters({
   left: 17,
 })
 
-// TODO: find out how to run without those options
-// Travis-CI Docker image workaround
-const puppeteerOptions: MkPdfOptions = {
-  puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  },
-}
-
 const TEST_TIMEOUT = 10000 // 10 seconds
 const OUTPUT_NEW_EXPECTED_FILES = false
+
+let converter: HtmlToPdfConverter
+
+beforeAll(async () => {
+  // TODO: find out how to run without those options
+  // Travis-CI Docker image workaround
+  const puppeteerOptions: MkPdfOptions = {
+    puppeteer: {
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    },
+  }
+
+  converter = await initialize(puppeteerOptions)
+})
+
+afterAll(async () => {
+  await converter.destroy()
+})
 
 describe('mkCompoundPdf()', () => {
   it(
     'text footer',
     async () => {
-      const pdfBuffer = await mkCompoundPdf(
-        [
-          {
-            pdfContent: firstPageHtml,
-            footer: {
-              type: 'TextSlot',
-              left: {
-                fontPath: fontPath,
-                text: 'https://github.com/moshensky/html-to-pdf-converter',
-                size: footerFontSize,
-                underline: true,
-                color: 0x0060bf, // '#0060bf'
-              },
-              right: {
-                fontPath: fontPath,
-                text: 'Page {page} of {pages}',
-                size: footerFontSize,
-                color: 0x000000, // '#000000'
-              },
+      const pdfBuffer = await converter.mkCompoundPdf([
+        {
+          pdfContent: firstPageHtml,
+          footer: {
+            type: 'TextSlot',
+            left: {
+              fontPath: fontPath,
+              text: 'https://github.com/moshensky/html-to-pdf-converter',
+              size: footerFontSize,
+              underline: true,
+              color: 0x0060bf, // '#0060bf'
             },
-            margin,
-            pageSize: pageSizeInMM.A4.portrait,
+            right: {
+              fontPath: fontPath,
+              text: 'Page {page} of {pages}',
+              size: footerFontSize,
+              color: 0x000000, // '#000000'
+            },
           },
-        ],
-        puppeteerOptions,
-      )
+          margin,
+          pageSize: pageSizeInMM.A4.portrait,
+        },
+      ])
 
       await compareToExpected('textFooter', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
@@ -72,29 +79,26 @@ describe('mkCompoundPdf()', () => {
   it(
     'multiple pages with different html footers',
     async () => {
-      const pdfBuffer = await mkCompoundPdf(
-        [
-          {
-            pdfContent: firstPageHtml,
-            footer: {
-              type: 'HtmlSlot',
-              html: footerHtml,
-            },
-            margin,
-            pageSize: pageSizeInMM.A4.portrait,
+      const pdfBuffer = await converter.mkCompoundPdf([
+        {
+          pdfContent: firstPageHtml,
+          footer: {
+            type: 'HtmlSlot',
+            html: footerHtml,
           },
-          {
-            pdfContent: resultsHtml,
-            footer: {
-              type: 'HtmlSlot',
-              html: footerHtml,
-            },
-            margin,
-            pageSize: pageSizeInMM.A4.landscape,
+          margin,
+          pageSize: pageSizeInMM.A4.portrait,
+        },
+        {
+          pdfContent: resultsHtml,
+          footer: {
+            type: 'HtmlSlot',
+            html: footerHtml,
           },
-        ],
-        puppeteerOptions,
-      )
+          margin,
+          pageSize: pageSizeInMM.A4.landscape,
+        },
+      ])
 
       await compareToExpectedMultiple('htmlFooter', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
@@ -104,20 +108,17 @@ describe('mkCompoundPdf()', () => {
   it(
     'single page with html header',
     async () => {
-      const pdfBuffer = await mkCompoundPdf(
-        [
-          {
-            pdfContent: firstPageHtml,
-            header: {
-              type: 'HtmlSlot',
-              html: headerHtml,
-            },
-            margin,
-            pageSize: pageSizeInMM.A4.portrait,
+      const pdfBuffer = await converter.mkCompoundPdf([
+        {
+          pdfContent: firstPageHtml,
+          header: {
+            type: 'HtmlSlot',
+            html: headerHtml,
           },
-        ],
-        puppeteerOptions,
-      )
+          margin,
+          pageSize: pageSizeInMM.A4.portrait,
+        },
+      ])
 
       await compareToExpected('singlePageWithHtmlHeader', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
