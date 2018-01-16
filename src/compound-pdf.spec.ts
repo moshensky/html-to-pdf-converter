@@ -6,7 +6,7 @@ import { PrintMargin, pageSizeInMM } from '../src/types'
 import { Millimeters } from './index'
 import { compareToExpectedMultiple, compareToExpected } from './utils/test-helpers'
 
-// const headerHtml = readFileSync(join(__dirname, './test-files/header.html'), 'utf8')
+const headerHtml = readFileSync(join(__dirname, './test-files/header.html'), 'utf8')
 const footerHtml = readFileSync(join(__dirname, './test-files/footer.html'), 'utf8')
 const firstPageHtml = readFileSync(join(__dirname, './test-files/first-page.html'), 'utf8')
 const resultsHtml = readFileSync(join(__dirname, './test-files/results.html'), 'utf8')
@@ -67,8 +67,9 @@ describe('mkCompoundPdf()', () => {
     TEST_TIMEOUT,
   )
 
+  // TODO: create different footer in order to see obvious differences
   it(
-    'html footer',
+    'multiple pages with different html footers',
     async () => {
       const pdfBuffer = await mkCompoundPdf(
         [
@@ -95,6 +96,29 @@ describe('mkCompoundPdf()', () => {
       )
 
       await compareToExpectedMultiple('htmlFooter', pdfBuffer, false)
+    },
+    TEST_TIMEOUT,
+  )
+
+  it(
+    'single page with html header',
+    async () => {
+      const pdfBuffer = await mkCompoundPdf(
+        [
+          {
+            pdfContent: firstPageHtml,
+            header: {
+              type: 'HtmlSlot',
+              html: headerHtml,
+            },
+            margin,
+            pageSize: pageSizeInMM.A4.portrait,
+          },
+        ],
+        puppeteerOptions,
+      )
+
+      await compareToExpected('singlePageWithHtmlHeader', pdfBuffer, true)
     },
     TEST_TIMEOUT,
   )

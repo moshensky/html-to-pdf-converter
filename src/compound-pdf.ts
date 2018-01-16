@@ -14,7 +14,7 @@ import { appendPdfs, getPagesCount, mergePdfs, addFooter } from './hummus'
 import { unreachable } from './utils/index'
 import { Millimeters, PdfText, SlotType } from './index'
 
-const getFooterSize = async (
+const calcSlotSize = async (
   footer: Slot,
   margin: PrintMargin,
   pageSize: PageSize,
@@ -45,10 +45,8 @@ const mkPdfWithSpaceForSlots = async (
   { pdfContent, header, footer, margin, pageSize }: PdfContentWithSlots,
   page: puppeteer.Page,
 ): Promise<PdfWithSpaceForSlots> => {
-  const headerSize = header ? PageSize.ofZero() : PageSize.ofZero()
-  const footerSize = footer
-    ? await getFooterSize(footer, margin, pageSize, page)
-    : PageSize.ofZero()
+  const headerSize = header ? await calcSlotSize(header, margin, pageSize, page) : PageSize.ofZero()
+  const footerSize = footer ? await calcSlotSize(footer, margin, pageSize, page) : PageSize.ofZero()
   const pdfBuffer = await mkSizedPdf(
     pdfContent,
     page,
@@ -145,24 +143,14 @@ export const mkCompoundPdf = async (
   let startPage = 1
   for (let { content, pagesCount } of pdfsWithSpaceForSlots) {
     const { mainPdf, margin, footer, header } = content
-    const commonArgs = { margin, pagesCount, page, startFromPage: startPage, totalPagesCount }
+    const common = { margin, pagesCount, page, startFromPage: startPage, totalPagesCount }
 
     const withHeader = header
-      ? await addSlotToPdf({
-          ...commonArgs,
-          pdf: mainPdf,
-          slot: header,
-          slotType: 'header',
-        })
+      ? await addSlotToPdf({ ...common, pdf: mainPdf, slot: header, slotType: 'header' })
       : mainPdf
 
     const withSlots = footer
-      ? await addSlotToPdf({
-          ...commonArgs,
-          pdf: withHeader,
-          slot: footer,
-          slotType: 'footer',
-        })
+      ? await addSlotToPdf({ ...common, pdf: withHeader, slot: footer, slotType: 'footer' })
       : withHeader
 
     pdfsWithSlots.push(withSlots)
