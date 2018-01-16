@@ -122,16 +122,16 @@ export const getPDFWithCustomSize = (document: string): Buffer =>
 
 ## Roadmap
 
-[x] add html headers
-[ ] add text headers
-[ ] document API
-[ ] provide more examples using `javascript`
-[ ] load document from URL, wait for all resources do be loaded (css, js, images, fonts, etc.), wait for javascript execution and than generate PDF
-[x] setup CI
-[x] cover with tests
-[ ] add performance tests
-[ ] option to configure reusing chrome instances
-[ ] use puppeteer header/footer template only when there is no need for different headers/footers per different pages
+- [x] add html headers
+- [ ] add text headers
+- [ ] document API
+- [ ] provide more examples using `javascript`
+- [ ] load document from URL, wait for all resources do be loaded (css, js, images, fonts, etc.), wait for javascript execution and than generate PDF
+- [x] setup CI
+- [x] cover with tests
+- [ ] add performance tests
+- [ ] option to configure reusing chrome instances
+- [ ] use puppeteer header/footer template only when there is no need for different headers/footers per different pages
 
 ## How to run tests
 
