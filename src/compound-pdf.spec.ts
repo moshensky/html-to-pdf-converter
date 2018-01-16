@@ -30,6 +30,7 @@ const puppeteerOptions: MkPdfOptions = {
 }
 
 const TEST_TIMEOUT = 10000 // 10 seconds
+const OUTPUT_NEW_EXPECTED_FILES = false
 
 describe('mkCompoundPdf()', () => {
   it(
@@ -62,7 +63,7 @@ describe('mkCompoundPdf()', () => {
         puppeteerOptions,
       )
 
-      await compareToExpected('textFooter', pdfBuffer, false)
+      await compareToExpected('textFooter', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
     TEST_TIMEOUT,
   )
@@ -95,7 +96,7 @@ describe('mkCompoundPdf()', () => {
         puppeteerOptions,
       )
 
-      await compareToExpectedMultiple('htmlFooter', pdfBuffer, false)
+      await compareToExpectedMultiple('htmlFooter', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
     TEST_TIMEOUT,
   )
@@ -118,7 +119,7 @@ describe('mkCompoundPdf()', () => {
         puppeteerOptions,
       )
 
-      await compareToExpected('singlePageWithHtmlHeader', pdfBuffer, true)
+      await compareToExpected('singlePageWithHtmlHeader', pdfBuffer, OUTPUT_NEW_EXPECTED_FILES)
     },
     TEST_TIMEOUT,
   )

@@ -26,7 +26,6 @@ export const mkSizedPdf = async (
   margin: PrintMargin = PrintMargin.ofZero(),
 ) => {
   await page.setContent(html)
-  await page.emulateMedia('screen')
   const pdfBuffer = await page.pdf({
     width: size.width.toString(),
     height: size.height.toString(),
@@ -50,13 +49,13 @@ export const calcContentSize = async (
   page: puppeteer.Page,
 ) => {
   const contentViewPort = {
-    width: Math.ceil(
+    width: Math.floor(
       pageSize.width
         .subtract(margin.left)
         .subtract(margin.right)
         .toPixels()._n,
     ),
-    height: Math.ceil(pageSize.height.toPixels()._n),
+    height: Math.floor(pageSize.height.toPixels()._n),
   }
 
   await page.setViewport(contentViewPort)

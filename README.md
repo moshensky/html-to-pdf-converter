@@ -122,13 +122,16 @@ export const getPDFWithCustomSize = (document: string): Buffer =>
 
 ## Roadmap
 
-- add headers (asap in a day or two)
-- document API
-- provide more examples using `javascript`
-- load document from URL, wait for all resources do be loaded (css, js, images, fonts, etc.), wait for javascript execution and than generate PDF
-- setup CI
-- cover with tests
-- option to configure reusing chrome instances
+[x] add html headers
+[ ] add text headers
+[ ] document API
+[ ] provide more examples using `javascript`
+[ ] load document from URL, wait for all resources do be loaded (css, js, images, fonts, etc.), wait for javascript execution and than generate PDF
+[x] setup CI
+[x] cover with tests
+[ ] add performance tests
+[ ] option to configure reusing chrome instances
+[ ] use puppeteer header/footer template only when there is no need for different headers/footers per different pages
 
 ## How to run tests
 
@@ -164,5 +167,3 @@ If pdf comparing tests would fail, an image diff would be generated inside `outp
 [coveralls-url]: https://coveralls.io/github/moshensky/html-to-pdf-converter?branch=master
 [snyk-badge-url]: https://snyk.io/test/github/moshensky/html-to-pdf-converter/badge.svg?targetFile=package.json
 [snyk-url]: https://snyk.io/test/github/moshensky/html-to-pdf-converter?targetFile=package.json
-
-

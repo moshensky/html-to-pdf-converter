@@ -33,7 +33,7 @@ const calcSlotSize = async (
 
       return {
         width: pageSize.width.subtract(margin.left).subtract(margin.right),
-        height: height.add(Millimeters.of(4)), // add top padding to footer of 4 mm
+        height: height.add(Millimeters.of(4)), // add top padding to footer of 4 mm for text slot
       }
     }
     default:
@@ -47,21 +47,11 @@ const mkPdfWithSpaceForSlots = async (
 ): Promise<PdfWithSpaceForSlots> => {
   const headerSize = header ? await calcSlotSize(header, margin, pageSize, page) : PageSize.ofZero()
   const footerSize = footer ? await calcSlotSize(footer, margin, pageSize, page) : PageSize.ofZero()
-  const pdfBuffer = await mkSizedPdf(
-    pdfContent,
-    page,
-    // TODO: evaluate whether this is still needed
-    {
-      height: pageSize.height,
-      // adjust page width according to rounded footer width
-      width: footerSize.width.add(margin.left).add(margin.right),
-    },
-    {
-      ...margin,
-      top: margin.top.add(headerSize.height),
-      bottom: margin.bottom.add(footerSize.height),
-    },
-  )
+  const pdfBuffer = await mkSizedPdf(pdfContent, page, pageSize, {
+    ...margin,
+    top: margin.top.add(headerSize.height),
+    bottom: margin.bottom.add(footerSize.height),
+  })
 
   return {
     mainPdf: pdfBuffer,
@@ -93,9 +83,9 @@ const addSlotToPdf = async (args: AddHeaderFooterToPdfArgs): Promise<Buffer> => 
         startFromPage + pagesCount,
         totalPagesCount,
       )
-      const pdfContent = await mkSizedPdf(htmlContent, page, size)
+      const slotPdf = await mkSizedPdf(htmlContent, page, size)
 
-      return mergePdfs(pdf, pdfContent, margin, slotType)
+      return mergePdfs(pdf, slotPdf, margin, slotType, size)
     }
     case 'TextSlot': {
       if (slotType === 'header') {

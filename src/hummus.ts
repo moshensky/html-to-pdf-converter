@@ -11,7 +11,7 @@ import {
 } from 'hummus'
 import { ReadStreamForBuffer } from './read-stream-for-buffer'
 import { PDFStreamForBuffer } from './pdf-stream-for-buffer'
-import { PrintMargin, TextSlot, PdfPoints, SlotType } from './types'
+import { PrintMargin, TextSlot, PdfPoints, SlotType, PageSize } from './types'
 
 interface PageInfo {
   width: PdfPoints
@@ -118,7 +118,13 @@ export const addFooter = (args: AddFooterArgs) => {
   return outputBuffer.getBuffer()
 }
 
-export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin, type: SlotType) => {
+export const mergePdfs = (
+  target: Buffer,
+  source: Buffer,
+  margin: PrintMargin,
+  type: SlotType,
+  slotSize: PageSize,
+) => {
   const targetReader = createReader(new ReadStreamForBuffer(target))
   const targetFirstPage = targetReader.parsePage(0)
   const targetMediaBox = targetFirstPage.getMediaBox()
@@ -139,8 +145,7 @@ export const mergePdfs = (target: Buffer, source: Buffer, margin: PrintMargin, t
   const yPos =
     type === 'footer'
       ? PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
-      : // TODO: find out that part
-        PdfPoints.of(targetMediaBox[0]).subtract(margin.top.toPdfPoints())
+      : slotSize.height.toPdfPoints().add(margin.top.toPdfPoints())
 
   range(0, targetPagesCount).forEach(pageIndex => {
     const page = pdfWriter.createPage.apply(pdfWriter, targetMediaBox)
