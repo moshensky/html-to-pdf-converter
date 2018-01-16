@@ -17,7 +17,6 @@
     "pages"
   ],
   "main": "./commonjs/index.js",
-  "module": "./es/index.js",
   "types": "./types/index.d.ts",
   "author": "Nikita Moshensky",
   "license": "MIT",
