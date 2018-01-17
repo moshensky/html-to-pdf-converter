@@ -26,119 +26,37 @@ All documents had to be proper HTML documents.
 
 For usage checkout `./src/compound-pdf.ts` file. For JS strip all types.
 
+`import { initialize, MkPdfOptions, HtmlToPdfConverter, Millimeters } from 'html-to-pdf-converter'`
+
+Define page print margins.
+
 ```ts
-import { PrintMargin, pageSizeInMM, mkCompoundPdf, mkPdf } from 'html-to-pdf-converter'
-const footerFontPath = join(
-  __dirname, 'path_to_font/roboto-v18-latin_greek_cyrillic-regular.ttf',
-)
-
-const fontPath = join(__dirname, '../fonts/roboto-v18-latin_greek_cyrillic-regular.ttf')
-const footerFontSize = Millimeters.of(4.2)
-
 const margin: PrintMargin = PrintMargin.ofMillimeters({
   top: 7.5,
   right: 15,
   bottom: 5,
   left: 17,
 })
+```
 
-const puppeteerOptions: MkPdfOptions = {
-  puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  },
-}
+Get converter
+`converter = await initialize(puppeteerOptions)`
 
-// Initialize converter, puppeteer browser launch options could be passed in
-const converter: HtmlToPdfConverter = await initialize(puppeteerOptions)
-// When finished don't forget to release resources
-// await converter.destroy()
+It returns promise which resolves to a few functions:
 
-// Converter signature
+```ts
 export interface HtmlToPdfConverter {
   mkCompoundPdf: (contents: PdfContentWithSlots[]) => Promise<Buffer>
   mkPdf: (content: PdfContent) => Promise<Buffer>
   destroy: () => Promise<void>
 }
-
-export const getPDFWithSimpleOneLineFooter= (document: string): Promise<Buffer> => {
-  converter.mkCompoundPdf([
-    {
-      pdfContent: document,
-      footer: {
-        type: 'TextHeaderFooter',
-        left: {
-          fontPath: footerFontPath,
-          text: 'https://github.com/moshensky/html-to-pdf-converter',
-          size: footerFontSize,
-          underline: true,
-          color: 0x0060bf, // '#0060bf'
-        },
-        right: {
-          fontPath: footerFontPath,
-          text: 'Page {page} of {pages}',
-          size: footerFontSize,
-          color: 0x000000, // '#000000'
-        },
-      },
-      margin,
-      pageSize: pageSizeInMM.A4.portrait,
-    },
-  ])
-}
-
-export const getPDFProtocolStream = (
-  firstPage: string,
-  firstPageFooter: string,
-  restPages: string,
-): Promise<Buffer> =>
-  converter.mkCompoundPdf([
-    {
-      pdfContent: firstPage,
-      footer: {
-        type: 'HtmlHeaderFooter',
-        html: firstPageFooter,
-      },
-      margin,
-      pageSize: pageSizeInMM.A4.portrait,
-    },
-    {
-      pdfContent: restPages,
-      footer: {
-        type: 'TextHeaderFooter',
-        left: {
-          fontPath: footerFontPath,
-          text: 'https://github.com/moshensky/html-to-pdf-converter',
-          size: footerFontSize,
-          underline: true,
-          color: 0x0060bf, // '#0060bf'
-        },
-        right: {
-          fontPath: footerFontPath,
-          text: 'Page {page} of {pages}',
-          size: footerFontSize,
-          color: 0x000000, // '#000000'
-        },
-      },
-      margin,
-      pageSize: pageSizeInMM.A4.landscape,
-    },
-  ])
-
-export const getPDFWithCustomSize = (document: string): Promise<Buffer> =>
-  converter.mkPdf({
-    pdfContent: document,
-    margin: {
-      top: 5,
-      right: 5,
-      bottom: 3,
-      left: 5,
-    },
-    pageSize: {
-      width: 62,
-      height: 27,
-    },
-  })
 ```
+
+`mkCompoundPdf` could be used to create a single multi page pdf from various content, where each content could have it's own different header or footer, while current page and total pages would be counted in sequence.
+
+`mkPdf` will create pdf from html. Page size and margins could be specified for the output pdf.
+
+Do not forget to call `converter.destroy()` before app exit to clean resources.
 
 ## Roadmap
 
