@@ -150,7 +150,7 @@ export const getPDFWithCustomSize = (document: string): Promise<Buffer> =>
 - [x] setup CI
 - [x] cover with tests
 - [ ] add performance tests
-- [ ] option to configure reusing chrome instances
+- [x] option to configure reusing chrome instances
 - [ ] use puppeteer header/footer template only when there is no need for different headers/footers per different pages
 
 ## How to run tests
