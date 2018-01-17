@@ -110,11 +110,10 @@ export interface MkPdfOptions {
   puppeteer?: puppeteer.LaunchOptions
 }
 
-export const mkCompoundPdf = async (
+const mkCompoundPdf = async (
   contents: PdfContentWithSlots[],
-  options: MkPdfOptions = {},
+  browser: puppeteer.Browser,
 ): Promise<Buffer> => {
-  const browser = await puppeteer.launch(options.puppeteer)
   const page = await browser.newPage()
   const pdfsWithSpaceForSlots: {
     content: PdfWithSpaceForSlots
@@ -147,20 +146,34 @@ export const mkCompoundPdf = async (
     startPage += pagesCount
   }
 
-  await browser.close()
+  await page.close()
 
   return appendPdfs(pdfsWithSlots)
 }
 
-export const mkPdf = async (
+const mkPdf = async (
   { margin, pageSize, pdfContent }: PdfContent,
-  options: MkPdfOptions = {},
+  browser: puppeteer.Browser,
 ): Promise<Buffer> => {
-  const browser = await puppeteer.launch(options.puppeteer)
   const page = await browser.newPage()
   const pdfBuffer = await mkSizedPdf(pdfContent, page, pageSize, margin)
-
-  await browser.close()
+  await page.close()
 
   return pdfBuffer
+}
+
+export interface HtmlToPdfConverter {
+  mkCompoundPdf: (contents: PdfContentWithSlots[]) => Promise<Buffer>
+  mkPdf: (content: PdfContent) => Promise<Buffer>
+  destroy: () => Promise<void>
+}
+
+export const initialize = async (options: MkPdfOptions = {}): Promise<HtmlToPdfConverter> => {
+  const browser = await puppeteer.launch(options.puppeteer)
+
+  return {
+    mkCompoundPdf: (contents: PdfContentWithSlots[]) => mkCompoundPdf(contents, browser),
+    mkPdf: (content: PdfContent) => mkPdf(content, browser),
+    destroy: () => browser.close(),
+  }
 }
