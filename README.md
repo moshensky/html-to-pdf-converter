@@ -24,7 +24,7 @@ There are two special placeholders `{page}` and `{pages}` that could be used ins
 `mkCompoundPdf` accepts array of html documents that would be concatenated. Total page count is going to be the sum of the final generated pdf.
 All documents had to be proper HTML documents.
 
-For usage checkout `./src/compound-pdf.ts` file. For JS strip all types.
+For usage checkout [./src/compound-pdf.spec.ts](https://github.com/moshensky/html-to-pdf-converter/blob/master/src/compound-pdf.spec.ts) file. For JS strip all types.
 
 `import { initialize, MkPdfOptions, HtmlToPdfConverter, Millimeters } from 'html-to-pdf-converter'`
 
