@@ -1,9 +1,8 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { initialize, MkPdfOptions, HtmlToPdfConverter } from '../src/compound-pdf'
 import { PrintMargin, pageSizeInMM } from '../src/types'
-import { Millimeters } from './index'
+import { initialize, MkPdfOptions, HtmlToPdfConverter, Millimeters } from './index'
 import { compareToExpectedMultiple, compareToExpected } from './utils/test-helpers'
 
 const headerHtml = readFileSync(join(__dirname, './test-files/header.html'), 'utf8')
