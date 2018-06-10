@@ -140,7 +140,6 @@ export const mergePdfs = (
   const buffer1CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer1))
   const buffer2CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer2))
 
-  const buffer2MediaBox = reader2.parsePage(0).getMediaBox()
   const buffer1MediaBox = reader1.parsePage(0).getMediaBox()
   const left = margin.left.toPdfPoints()
   const top =
@@ -149,7 +148,6 @@ export const mergePdfs = (
       : PdfPoints.of(buffer1MediaBox[3]).subtract(
           slotSize.height.toPdfPoints().add(margin.top.toPdfPoints()),
         )
-  // : slotSize.height.toPdfPoints().add(margin.top.toPdfPoints())
 
   range(0, buffer1PagesCount).forEach(pageIndex => {
     const page = pdfWriter.createPage.apply(pdfWriter, buffer1MediaBox)
