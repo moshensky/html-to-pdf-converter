@@ -119,44 +119,56 @@ export const addFooter = (args: AddFooterArgs) => {
 }
 
 export const mergePdfs = (
-  target: Buffer,
-  source: Buffer,
+  buffer1: Buffer,
+  buffer2: Buffer,
   margin: PrintMargin,
   type: SlotType,
   slotSize: PageSize,
 ) => {
-  const targetReader = createReader(new ReadStreamForBuffer(target))
-  const targetFirstPage = targetReader.parsePage(0)
-  const targetMediaBox = targetFirstPage.getMediaBox()
-  const targetPagesCount = targetReader.getPagesCount()
+  const reader1 = createReader(new ReadStreamForBuffer(buffer1))
+  const reader2 = createReader(new ReadStreamForBuffer(buffer2))
 
-  const sourceReader = createReader(new ReadStreamForBuffer(source))
-  const sourcePagesCount = sourceReader.getPagesCount()
-  if (sourcePagesCount < targetPagesCount) {
+  const buffer1PagesCount = reader1.getPagesCount()
+  const buffer2PagesCount = reader2.getPagesCount()
+  if (buffer2PagesCount < buffer1PagesCount) {
     throw new Error('Source pages count can not be smaller than target pages count!')
   }
 
   const outputBuffer = new PDFStreamForBuffer()
   const pdfWriter = createWriter(outputBuffer)
-  const targetCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(target))
-  const sourceCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(source))
 
+  const buffer1CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer1))
+  const buffer2CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer2))
+
+  const buffer2MediaBox = reader2.parsePage(0).getMediaBox()
+  const buffer1MediaBox = reader1.parsePage(0).getMediaBox()
   const left = margin.left.toPdfPoints()
-  const yPos =
+  const top =
     type === 'footer'
-      ? PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
-      : slotSize.height.toPdfPoints().add(margin.top.toPdfPoints())
+      ? margin.bottom.toPdfPoints()
+      : PdfPoints.of(buffer1MediaBox[3]).subtract(
+          slotSize.height.toPdfPoints().add(margin.top.toPdfPoints()),
+        )
+  // : slotSize.height.toPdfPoints().add(margin.top.toPdfPoints())
 
-  range(0, targetPagesCount).forEach(pageIndex => {
-    const page = pdfWriter.createPage.apply(pdfWriter, targetMediaBox)
-    targetCopyCxt.mergePDFPageToPage(page, pageIndex)
+  range(0, buffer1PagesCount).forEach(pageIndex => {
+    const page = pdfWriter.createPage.apply(pdfWriter, buffer1MediaBox)
 
-    const formObjectId = sourceCopyCxt.createFormXObjectFromPDFPage(pageIndex, ePDFPageBoxMediaBox)
+    const buffer1FormObjectId = buffer1CpyCxt.createFormXObjectFromPDFPage(
+      pageIndex,
+      ePDFPageBoxMediaBox,
+    )
+    const buffer2FormObjectId = buffer2CpyCxt.createFormXObjectFromPDFPage(
+      pageIndex,
+      ePDFPageBoxMediaBox,
+    )
+
     pdfWriter
       .startPageContentContext(page)
       .q()
-      .cm(1, 0, 0, -1, left._n, yPos._n)
-      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(buffer1FormObjectId))
+      .cm(1, 0, 0, 1, left._n, top._n)
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(buffer2FormObjectId))
       .Q()
 
     pdfWriter.writePage(page)

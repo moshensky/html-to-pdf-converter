@@ -1,4 +1,4 @@
-import { unreachable } from './utils/index'
+import { unreachableOrElse } from './utils/index'
 
 const mmPerInch = 25.4
 const BROWSER_POINTS_PER_MM = 96 / mmPerInch
@@ -78,7 +78,7 @@ export class Pixels {
       case 'ceil':
         return Millimeters.of(Math.ceil(this._n / BROWSER_POINTS_PER_MM))
       default:
-        return unreachable(type)
+        return unreachableOrElse(type, Millimeters.of(NaN))
     }
   }
 
