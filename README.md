@@ -70,6 +70,7 @@ Do not forget to call `converter.destroy()` before app exit to clean resources.
 - [ ] add performance tests
 - [x] option to configure reusing chrome instances
 - [ ] use puppeteer header/footer template only when there is no need for different headers/footers per different pages
+- [ ] use nvm inside docker image
 
 ## How to run tests
 
