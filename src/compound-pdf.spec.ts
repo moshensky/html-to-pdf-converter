@@ -26,10 +26,9 @@ const OUTPUT_NEW_EXPECTED_FILES = false
 let converter: HtmlToPdfConverter
 
 beforeAll(async () => {
-  // TODO: find out how to run without those options
-  // Travis-CI Docker image workaround
   const puppeteerOptions: MkPdfOptions = {
     puppeteer: {
+      // TODO: find out how to run without `no sandbox` options for Docker
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     },
   }

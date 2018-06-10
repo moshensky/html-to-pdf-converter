@@ -2,7 +2,6 @@ import { range } from 'ramda'
 import {
   createReader,
   createWriterToModify,
-  PDFPageModifier,
   XObjectContentContext,
   WriteTextOptions,
   createWriter,
@@ -43,12 +42,28 @@ export interface AddFooterArgs {
   totalPagesCount: number
 }
 
+const editPage = (
+  cxt: XObjectContentContext,
+  pageInfo: PageInfo,
+  writeTextArguments: ReadonlyArray<GetWriteTextArguments>,
+): void => {
+  const { q, writeText, Q } = cxt
+  q.apply(cxt)
+  writeTextArguments.forEach(getArguments => {
+    const { txtOpts, ...args } = getArguments(pageInfo)
+    const { font, size, underline, color } = txtOpts
+    const options: WriteTextOptions = { font, size: size._n, underline, color }
+    writeText.apply(cxt, [args.text, args.x._n, args.y._n, options])
+  })
+  Q.apply(cxt)
+}
+
 export const addFooter = (args: AddFooterArgs) => {
   const { pdfBuffer, margin, txt, startPageNum, endPageNum, totalPagesCount } = args
   const pdfReader = createReader(new ReadStreamForBuffer(pdfBuffer))
 
   const outputBuffer = new PDFStreamForBuffer()
-  const pdfWriter = createWriterToModify(new ReadStreamForBuffer(pdfBuffer), outputBuffer)
+  const pdfWriter = createWriter(outputBuffer)
 
   const writeTextArguments: GetWriteTextArguments[] = []
 
@@ -87,30 +102,31 @@ export const addFooter = (args: AddFooterArgs) => {
     })
   }
 
-  const editPage = (cxt: XObjectContentContext, pageInfo: PageInfo): void => {
-    const { cm, q, writeText, Q } = cxt
-    cm.apply(cxt, [1, 0, 0, -1, 0, pageInfo.height._n])
-    q.apply(cxt)
-    writeTextArguments.forEach(getArguments => {
-      const { txtOpts, ...args } = getArguments(pageInfo)
-      const { font, size, underline, color } = txtOpts
-      const options: WriteTextOptions = { font, size: size._n, underline, color }
-      writeText.apply(cxt, [args.text, args.x._n, args.y._n, options])
-    })
-    Q.apply(cxt)
-  }
-
-  const [, , width, height] = pdfReader.parsePage(0).getMediaBox()
+  const buffer1MediaBox = pdfReader.parsePage(0).getMediaBox()
+  const buffer1CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(pdfBuffer))
+  const [, , width, height] = buffer1MediaBox
   range(0, endPageNum - startPageNum).forEach(pageIndex => {
-    const pageModifier = new PDFPageModifier(pdfWriter, pageIndex)
-    const cxt = pageModifier.startContext().getContext()
-    editPage(cxt, {
-      width: PdfPoints.of(width),
-      height: PdfPoints.of(height),
-      pageNumber: startPageNum + pageIndex,
-      pagesCount: totalPagesCount,
-    })
-    pageModifier.endContext().writePage()
+    const page = pdfWriter.createPage.apply(pdfWriter, buffer1MediaBox)
+    const formObjectId = buffer1CpyCxt.createFormXObjectFromPDFPage(pageIndex, ePDFPageBoxMediaBox)
+
+    const cxt = pdfWriter
+      .startPageContentContext(page)
+      .q()
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
+      .Q()
+
+    editPage(
+      cxt,
+      {
+        width: PdfPoints.of(width),
+        height: PdfPoints.of(height),
+        pageNumber: startPageNum + pageIndex,
+        pagesCount: totalPagesCount,
+      },
+      writeTextArguments,
+    )
+
+    pdfWriter.writePage(page)
   })
 
   pdfWriter.end()
@@ -119,44 +135,54 @@ export const addFooter = (args: AddFooterArgs) => {
 }
 
 export const mergePdfs = (
-  target: Buffer,
-  source: Buffer,
+  buffer1: Buffer,
+  buffer2: Buffer,
   margin: PrintMargin,
   type: SlotType,
   slotSize: PageSize,
 ) => {
-  const targetReader = createReader(new ReadStreamForBuffer(target))
-  const targetFirstPage = targetReader.parsePage(0)
-  const targetMediaBox = targetFirstPage.getMediaBox()
-  const targetPagesCount = targetReader.getPagesCount()
+  const reader1 = createReader(new ReadStreamForBuffer(buffer1))
+  const reader2 = createReader(new ReadStreamForBuffer(buffer2))
 
-  const sourceReader = createReader(new ReadStreamForBuffer(source))
-  const sourcePagesCount = sourceReader.getPagesCount()
-  if (sourcePagesCount < targetPagesCount) {
+  const buffer1PagesCount = reader1.getPagesCount()
+  const buffer2PagesCount = reader2.getPagesCount()
+  if (buffer2PagesCount < buffer1PagesCount) {
     throw new Error('Source pages count can not be smaller than target pages count!')
   }
 
   const outputBuffer = new PDFStreamForBuffer()
   const pdfWriter = createWriter(outputBuffer)
-  const targetCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(target))
-  const sourceCopyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(source))
 
+  const buffer1CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer1))
+  const buffer2CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(buffer2))
+
+  const buffer1MediaBox = reader1.parsePage(0).getMediaBox()
   const left = margin.left.toPdfPoints()
-  const yPos =
+  const top =
     type === 'footer'
-      ? PdfPoints.of(targetMediaBox[3]).subtract(margin.bottom.toPdfPoints())
-      : slotSize.height.toPdfPoints().add(margin.top.toPdfPoints())
+      ? margin.bottom.toPdfPoints()
+      : PdfPoints.of(buffer1MediaBox[3]).subtract(
+          slotSize.height.toPdfPoints().add(margin.top.toPdfPoints()),
+        )
 
-  range(0, targetPagesCount).forEach(pageIndex => {
-    const page = pdfWriter.createPage.apply(pdfWriter, targetMediaBox)
-    targetCopyCxt.mergePDFPageToPage(page, pageIndex)
+  range(0, buffer1PagesCount).forEach(pageIndex => {
+    const page = pdfWriter.createPage.apply(pdfWriter, buffer1MediaBox)
 
-    const formObjectId = sourceCopyCxt.createFormXObjectFromPDFPage(pageIndex, ePDFPageBoxMediaBox)
+    const buffer1FormObjectId = buffer1CpyCxt.createFormXObjectFromPDFPage(
+      pageIndex,
+      ePDFPageBoxMediaBox,
+    )
+    const buffer2FormObjectId = buffer2CpyCxt.createFormXObjectFromPDFPage(
+      pageIndex,
+      ePDFPageBoxMediaBox,
+    )
+
     pdfWriter
       .startPageContentContext(page)
       .q()
-      .cm(1, 0, 0, -1, left._n, yPos._n)
-      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(buffer1FormObjectId))
+      .cm(1, 0, 0, 1, left._n, top._n)
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(buffer2FormObjectId))
       .Q()
 
     pdfWriter.writePage(page)

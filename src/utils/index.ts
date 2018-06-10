@@ -1,7 +1,7 @@
 export * from './size'
 export * from './transform-matrix'
 
-export const unreachable: (x?: never) => never = () => {
+export function unreachable(_: never) {
   throw new Error('Unreachable code!')
 }
 
