@@ -2,7 +2,6 @@ import { range } from 'ramda'
 import {
   createReader,
   createWriterToModify,
-  PDFPageModifier,
   XObjectContentContext,
   WriteTextOptions,
   createWriter,
@@ -43,12 +42,28 @@ export interface AddFooterArgs {
   totalPagesCount: number
 }
 
+const editPage = (
+  cxt: XObjectContentContext,
+  pageInfo: PageInfo,
+  writeTextArguments: ReadonlyArray<GetWriteTextArguments>,
+): void => {
+  const { q, writeText, Q } = cxt
+  q.apply(cxt)
+  writeTextArguments.forEach(getArguments => {
+    const { txtOpts, ...args } = getArguments(pageInfo)
+    const { font, size, underline, color } = txtOpts
+    const options: WriteTextOptions = { font, size: size._n, underline, color }
+    writeText.apply(cxt, [args.text, args.x._n, args.y._n, options])
+  })
+  Q.apply(cxt)
+}
+
 export const addFooter = (args: AddFooterArgs) => {
   const { pdfBuffer, margin, txt, startPageNum, endPageNum, totalPagesCount } = args
   const pdfReader = createReader(new ReadStreamForBuffer(pdfBuffer))
 
   const outputBuffer = new PDFStreamForBuffer()
-  const pdfWriter = createWriterToModify(new ReadStreamForBuffer(pdfBuffer), outputBuffer)
+  const pdfWriter = createWriter(outputBuffer)
 
   const writeTextArguments: GetWriteTextArguments[] = []
 
@@ -87,30 +102,31 @@ export const addFooter = (args: AddFooterArgs) => {
     })
   }
 
-  const editPage = (cxt: XObjectContentContext, pageInfo: PageInfo): void => {
-    const { cm, q, writeText, Q } = cxt
-    cm.apply(cxt, [1, 0, 0, -1, 0, pageInfo.height._n])
-    q.apply(cxt)
-    writeTextArguments.forEach(getArguments => {
-      const { txtOpts, ...args } = getArguments(pageInfo)
-      const { font, size, underline, color } = txtOpts
-      const options: WriteTextOptions = { font, size: size._n, underline, color }
-      writeText.apply(cxt, [args.text, args.x._n, args.y._n, options])
-    })
-    Q.apply(cxt)
-  }
-
-  const [, , width, height] = pdfReader.parsePage(0).getMediaBox()
+  const buffer1MediaBox = pdfReader.parsePage(0).getMediaBox()
+  const buffer1CpyCxt = pdfWriter.createPDFCopyingContext(new ReadStreamForBuffer(pdfBuffer))
+  const [, , width, height] = buffer1MediaBox
   range(0, endPageNum - startPageNum).forEach(pageIndex => {
-    const pageModifier = new PDFPageModifier(pdfWriter, pageIndex)
-    const cxt = pageModifier.startContext().getContext()
-    editPage(cxt, {
-      width: PdfPoints.of(width),
-      height: PdfPoints.of(height),
-      pageNumber: startPageNum + pageIndex,
-      pagesCount: totalPagesCount,
-    })
-    pageModifier.endContext().writePage()
+    const page = pdfWriter.createPage.apply(pdfWriter, buffer1MediaBox)
+    const formObjectId = buffer1CpyCxt.createFormXObjectFromPDFPage(pageIndex, ePDFPageBoxMediaBox)
+
+    const cxt = pdfWriter
+      .startPageContentContext(page)
+      .q()
+      .doXObject(page.getResourcesDictionary().addFormXObjectMapping(formObjectId))
+      .Q()
+
+    editPage(
+      cxt,
+      {
+        width: PdfPoints.of(width),
+        height: PdfPoints.of(height),
+        pageNumber: startPageNum + pageIndex,
+        pagesCount: totalPagesCount,
+      },
+      writeTextArguments,
+    )
+
+    pdfWriter.writePage(page)
   })
 
   pdfWriter.end()
