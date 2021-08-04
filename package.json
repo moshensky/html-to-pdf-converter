@@ -42,7 +42,7 @@
   "dependencies": {
     "@types/puppeteer": "^0.13.9",
     "@types/ramda": "^0.25.6",
-    "hummus": "^1.0.83",
+    "hummus": "^1.0.87",
     "puppeteer": "^1.0.0",
     "ramda": "^0.25.0"
   },
