@@ -44,7 +44,7 @@
     "@types/ramda": "^0.25.6",
     "hummus": "^1.0.83",
     "puppeteer": "^1.0.0",
-    "ramda": "^0.25.0"
+    "ramda": "^0.27.2"
   },
   "devDependencies": {
     "@types/glob": "^5.0.34",
