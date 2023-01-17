@@ -1,10 +1,16 @@
-# html-to-pdf-converter
+# 🚫 This repository has been archived
+
+See [pdf-visual-diff](https://github.com/moshensky/pdf-visual-diff) for testing pfds.
+
+## html-to-pdf-converter
 
 [![NPM version][npm-badge-url]][npm-url]
 [![code style: prettier][prettier-badge-url]][prettier-url]
 [![Build Status][travis-ci-badge-url]][travis-ci-url]
 [![Coverage Status][coveralls-badge-url]][coveralls-url]
 [![Known Vulnerabilities][snyk-badge-url]][snyk-url]
+
+
 
 > HTML to PDF converter with support for HEADERS, FOOTERS and page numbers.
 
